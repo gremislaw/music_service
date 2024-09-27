@@ -1,0 +1,32 @@
+syntax = "proto3";
+
+package music_service.api;
+option go_package = "api/";
+
+message Song {
+    string name = 1;
+    int64 duration = 2;
+	string author = 3;
+}
+
+message Playlist {
+    repeated Song songs = 1; // список структур
+}
+
+message Response {
+    string response = 1;;
+}
+
+message Empty {}
+
+service MusicService {
+    rpc Play(Empty) returns(Response); 
+    rpc Pause(Empty) returns(Response);
+    rpc AddSong(Song) returns(Response);
+    rpc DeleteSong(Song) returns(Response);
+    rpc GetPlaylist(Empty) returns(Playlist);
+    rpc GetSong(Song) returns(Song);
+    rpc UpdateSong(Song) returns(Response);
+    rpc Next(Empty) returns(Response);
+    rpc Prev(Empty) returns(Response);
+}
