@@ -12,6 +12,10 @@ test:
 docker:
 	sudo docker compose up -d --build
 	sudo docker logs -tf music_service
+
+rebuild:
+	go mod tidy
+	make build
 	
 proto:
 	protoc --go_out=. --go_opt=paths=import \

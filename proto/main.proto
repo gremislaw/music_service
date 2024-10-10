@@ -10,7 +10,13 @@ message Song {
 }
 
 message Playlist {
-    repeated Song songs = 1; // список структур
+    string name = 1;
+    repeated Song songs = 2; // список структур
+}
+
+message SongPlaylist {
+    Song song = 1;
+    Playlist playlist = 2;
 }
 
 message Response {
@@ -24,7 +30,12 @@ service MusicService {
     rpc Pause(Empty) returns(Response);
     rpc AddSong(Song) returns(Response);
     rpc DeleteSong(Song) returns(Response);
-    rpc GetPlaylist(Empty) returns(Playlist);
+    //rpc AddSongToPlaylist(SongPlaylist) returns(Response);
+    //rpc DeleteSongFromPlaylist(SongPlaylist) returns(Response);
+    rpc AddPlaylist(Playlist) returns(Response);
+    rpc GetPlaylist(Playlist) returns(Response);
+    rpc DeletePlaylist(Playlist) returns(Response);
+    rpc PrintPlaylist(Playlist) returns(Song);
     rpc GetSong(Song) returns(Song);
     rpc UpdateSong(Song) returns(Response);
     rpc Next(Empty) returns(Response);
