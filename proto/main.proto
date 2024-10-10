@@ -35,7 +35,7 @@ service MusicService {
     rpc AddPlaylist(Playlist) returns(Response);
     rpc GetPlaylist(Playlist) returns(Response);
     rpc DeletePlaylist(Playlist) returns(Response);
-    rpc PrintPlaylist(Playlist) returns(Song);
+    rpc PrintPlaylist(Playlist) returns(Playlist);
     rpc GetSong(Song) returns(Song);
     rpc UpdateSong(Song) returns(Response);
     rpc Next(Empty) returns(Response);

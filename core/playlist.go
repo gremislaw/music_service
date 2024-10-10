@@ -50,3 +50,9 @@ func DeletePlaylist(name string, p *SimplePlaylist) (string, error) {
 	}
 	return res, err
 }
+
+func GetPlaylist(playlist *SimplePlaylist) string {
+	res := fmt.Sprintf("Playlist chosen. Name: %s.", playlist.Name)
+	fmt.Println(res)
+	return res
+}

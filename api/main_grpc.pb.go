@@ -46,7 +46,7 @@ type MusicServiceClient interface {
 	AddPlaylist(ctx context.Context, in *Playlist, opts ...grpc.CallOption) (*Response, error)
 	GetPlaylist(ctx context.Context, in *Playlist, opts ...grpc.CallOption) (*Response, error)
 	DeletePlaylist(ctx context.Context, in *Playlist, opts ...grpc.CallOption) (*Response, error)
-	PrintPlaylist(ctx context.Context, in *Playlist, opts ...grpc.CallOption) (*Song, error)
+	PrintPlaylist(ctx context.Context, in *Playlist, opts ...grpc.CallOption) (*Playlist, error)
 	GetSong(ctx context.Context, in *Song, opts ...grpc.CallOption) (*Song, error)
 	UpdateSong(ctx context.Context, in *Song, opts ...grpc.CallOption) (*Response, error)
 	Next(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*Response, error)
@@ -131,9 +131,9 @@ func (c *musicServiceClient) DeletePlaylist(ctx context.Context, in *Playlist, o
 	return out, nil
 }
 
-func (c *musicServiceClient) PrintPlaylist(ctx context.Context, in *Playlist, opts ...grpc.CallOption) (*Song, error) {
+func (c *musicServiceClient) PrintPlaylist(ctx context.Context, in *Playlist, opts ...grpc.CallOption) (*Playlist, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(Song)
+	out := new(Playlist)
 	err := c.cc.Invoke(ctx, MusicService_PrintPlaylist_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
@@ -194,7 +194,7 @@ type MusicServiceServer interface {
 	AddPlaylist(context.Context, *Playlist) (*Response, error)
 	GetPlaylist(context.Context, *Playlist) (*Response, error)
 	DeletePlaylist(context.Context, *Playlist) (*Response, error)
-	PrintPlaylist(context.Context, *Playlist) (*Song, error)
+	PrintPlaylist(context.Context, *Playlist) (*Playlist, error)
 	GetSong(context.Context, *Song) (*Song, error)
 	UpdateSong(context.Context, *Song) (*Response, error)
 	Next(context.Context, *Empty) (*Response, error)
@@ -230,7 +230,7 @@ func (UnimplementedMusicServiceServer) GetPlaylist(context.Context, *Playlist) (
 func (UnimplementedMusicServiceServer) DeletePlaylist(context.Context, *Playlist) (*Response, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeletePlaylist not implemented")
 }
-func (UnimplementedMusicServiceServer) PrintPlaylist(context.Context, *Playlist) (*Song, error) {
+func (UnimplementedMusicServiceServer) PrintPlaylist(context.Context, *Playlist) (*Playlist, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method PrintPlaylist not implemented")
 }
 func (UnimplementedMusicServiceServer) GetSong(context.Context, *Song) (*Song, error) {

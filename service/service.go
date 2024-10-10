@@ -193,7 +193,7 @@ func (srv MusicServiceServer) DeleteSong(ctx context.Context, song *api.Song) (*
 
 func (srv MusicServiceServer) AddPlaylist(ctx context.Context, playlist *api.Playlist) (*api.Response, error){
 	s := core.CreateSimplePlaylist(playlist.Name, list.New(), ctx)
-	res := AddPlaylist(s)
+	res := core.AddPlaylist(s)
 	_, err := srv.db.Exec("insert into playlists (playlistname) values ($1)", playlist.Name)
 	if err != nil {
 		panic(err)
@@ -203,7 +203,7 @@ func (srv MusicServiceServer) AddPlaylist(ctx context.Context, playlist *api.Pla
 
 func (srv MusicServiceServer) DeletePlaylist(ctx context.Context, playlist *api.Playlist) (*api.Response, error) {
 	var res *api.Response = new(api.Response)
-	status, err := DeletePlaylist(playlist.Name, srv.curPlaylist)
+	status, err := core.DeletePlaylist(playlist.Name, srv.curPlaylist)
 	res.Response = status
 	if err != nil {
 		fmt.Println("Error:", err)
@@ -218,7 +218,9 @@ func (srv MusicServiceServer) DeletePlaylist(ctx context.Context, playlist *api.
 }
 
 func (srv MusicServiceServer) PrintPlaylist(ctx context.Context, playlist *api.Playlist) (*api.Playlist, error) {
-	list := playlist.GetSongs()
+	songs := getPlaylistSongs(playlist.Name)
+	tmp := core.CreateSimplePlaylist(playlist.Name, songs, ctx)
+	list := tmp.GetSongs()
 	songsSlice := make([]*api.Song, list.Len())
 	i := 0
 	var err error = nil
@@ -246,7 +248,7 @@ func (srv MusicServiceServer) GetPlaylist(ctx context.Context, playlist *api.Pla
 	}
 	songs := getPlaylistSongs(srv.db, id_playlist)
 	curPlaylist := core.CreateSimplePlaylist(playlist.Name, songs, ctx)
-	res := GetPlaylist(s)
+	res := core.GetPlaylist(s)
 	return &api.Response{Response: res}, nil
 }
 
