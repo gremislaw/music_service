@@ -13,6 +13,7 @@ import (
 	"github.com/gremislaw/music_service/api"
 )
 
+
 type MusicServiceServer struct {
 	api.UnimplementedMusicServiceServer
 	curPlaylist *core.SimplePlaylist
@@ -47,10 +48,28 @@ func getSongsFromDb(db *sql.DB) *list.List{
 	return songs
 }
 
+func getSongID(db *sql.DB, name string) (int64, error) {
+	var id_temp sql.NullInt64
+	var id int64 = -1
+	err := db.QueryRow("select id from songs where name = $1", name).Scan(&id_temp)
+	if err != nil {
+		fmt.Println("Error:", err)
+		return -1, err
+	}
+	if id_temp.Valid {
+    id = id_temp.Int64
+	} else {
+		err = errors.New("invalid id in getPlatlistID")
+		fmt.Println("Error:", err)
+		return -1, err
+	}
+	return id, nil
+}
+
 func getPlaylistID(db *sql.DB, name string) (int64, error) {
 	var id_temp sql.NullInt64
 	var id int64 = -1
-	err := db.QueryRow("select id from playlists where playlistname = ?", name).Scan(&id_temp)
+	err := db.QueryRow("select id from playlists where playlistname = $1", name).Scan(&id_temp)
 	if err != nil {
 		fmt.Println("Error:", err)
 		return -1, err
@@ -66,7 +85,7 @@ func getPlaylistID(db *sql.DB, name string) (int64, error) {
 }
 
 func getPlaylistSongs(db *sql.DB, id int64) *list.List {
-	rows, err := db.Query("select id_song where id_playlist = ?", id)
+	rows, err := db.Query("select id_song from songs_playlists where id_playlist = $1", id)
 	if err != nil {
 		panic(err)
 	}
@@ -79,8 +98,8 @@ func getPlaylistSongs(db *sql.DB, id int64) *list.List {
 		if err != nil {
 			panic(err)
 		}
-		row := db.QueryRow("select * from songs where id = ?", id_song)
-		err = row.Scan(&song.Id, &song.Name, &song.Duration, &song.Author)
+		row := db.QueryRow("select * from songs where id = $1", id_song)
+		err = row.Scan(&song.Id, &song.Duration, &song.Name, &song.Author)
 		if err != nil {
 			panic(err)
 		}
@@ -116,7 +135,7 @@ func NewConfig() config {
 	return cfg
 }
 
-func (cfg config) isValid() bool {
+func (cfg config) IsValid() bool {
 	var res bool = true
 	if (cfg.POSTGRES_USER == "" || cfg.POSTGRES_PASSWORD == "" ||
 			cfg.POSTGRES_DB == "" || cfg.POSTGRES_HOST == "" ||
@@ -132,101 +151,97 @@ func NewService(db *sql.DB) api.MusicServiceServer {
 
 	for i := 1; !isDBAvailable(db); i++ {
         fmt.Printf("Db is unavailable(%ds)\n", i)
-		time.Sleep(1 * time.Second)
+		time.Sleep(5 * time.Second)
 	}
 	fmt.Println("Db is available")
 	songs := getSongsFromDb(db)
 	playlist := core.CreateSimplePlaylist("My favorite playlist", songs, context.Background())
 	service.curPlaylist = playlist
 	service.db = db
-	return service
+	return &service
 }
 
-func (srv MusicServiceServer) Play(ctx context.Context, empty *api.Empty) (*api.Response, error) {
+func (srv *MusicServiceServer) Play(ctx context.Context, empty *api.Empty) (*api.Response, error) {
 	res := srv.curPlaylist.Play()
 	return &api.Response{Response: res}, nil
 }
 
-func (srv MusicServiceServer) Pause(ctx context.Context, empty *api.Empty) (*api.Response, error) {
+func (srv *MusicServiceServer) Pause(ctx context.Context, empty *api.Empty) (*api.Response, error) {
 	res := srv.curPlaylist.Pause()
 	return &api.Response{Response: res}, nil
 }
 
-func (srv MusicServiceServer) AddSong(ctx context.Context, song *api.Song) (*api.Response, error){
+func (srv *MusicServiceServer) AddSong(ctx context.Context, song *api.Song) (*api.Response, error){
 	s := new(core.Song)
 	s.Author = song.Author
 	s.Duration = int(song.Duration)
 	s.Name = song.Name
 	res := srv.curPlaylist.AddSong(s)
-	_, err := srv.db.Exec("insert into songs (duration, songname, author) values ($1, $2, $3)", song.Duration, song.Name, song.Author)
+	_, err := srv.db.Exec("insert into songs (duration, name, author) values ($1, $2, $3)", song.Duration, song.Name, song.Author)
 	if err != nil {
 		panic(err)
 	}
 	return &api.Response{Response: res}, nil
 }
 
-func (srv MusicServiceServer) Next(ctx context.Context, empty *api.Empty) (*api.Response, error) {
+func (srv *MusicServiceServer) Next(ctx context.Context, empty *api.Empty) (*api.Response, error) {
 	res := srv.curPlaylist.Next()
 	return &api.Response{Response: res}, nil
 }
 
-func (srv MusicServiceServer) Prev(ctx context.Context, empty *api.Empty) (*api.Response, error) {
+func (srv *MusicServiceServer) Prev(ctx context.Context, empty *api.Empty) (*api.Response, error) {
 	res := srv.curPlaylist.Prev()
 	return &api.Response{Response: res}, nil
 }
 
-func (srv MusicServiceServer) DeleteSong(ctx context.Context, song *api.Song) (*api.Response, error) {
-	var res *api.Response = new(api.Response)
-	status, err := srv.curPlaylist.DeleteSong(song.Name)
-	res.Response = status
-	if err != nil {
-		fmt.Println("Error:", err)
-		return res, err
-	}
-	_, err = srv.db.Exec("delete from songs where songname = $1", song.Name)
+func (srv *MusicServiceServer) DeleteSong(ctx context.Context, song *api.Song) (*api.Response, error) {
+	res, err := srv.curPlaylist.DeleteSong(song.Name)
 	if err != nil {
 		fmt.Println("Error:", err)
 		return &api.Response{Response: ""}, err
 	}
-	return res, err
+	_, err = srv.db.Exec("delete from songs where name = $1", song.Name)
+	if err != nil {
+		fmt.Println("Error:", err)
+		return &api.Response{Response: ""}, err
+	}
+	return &api.Response{Response: res}, err
 }
 
-func (srv MusicServiceServer) AddPlaylist(ctx context.Context, playlist *api.Playlist) (*api.Response, error){
-	s := core.CreateSimplePlaylist(playlist.Name, list.New(), ctx)
+func (srv *MusicServiceServer) AddPlaylist(ctx context.Context, playlist *api.Playlist) (*api.Response, error){
+	s := core.CreateSimplePlaylist(playlist.Name, list.New(), nil)
 	res := core.AddPlaylist(s)
-	_, err := srv.db.Exec("insert into playlists (playlistname) values ($1)", playlist.Name)
+	_, err := srv.db.Exec("insert into playlists (name) values ($1)", playlist.Name)
 	if err != nil {
 		panic(err)
 	}
 	return &api.Response{Response: res}, nil
 }
 
-func (srv MusicServiceServer) DeletePlaylist(ctx context.Context, playlist *api.Playlist) (*api.Response, error) {
-	var res *api.Response = new(api.Response)
-	status, err := core.DeletePlaylist(playlist.Name, srv.curPlaylist)
-	res.Response = status
-	if err != nil {
-		fmt.Println("Error:", err)
-		return res, err
-	}
-	_, err = srv.db.Exec("delete from playlists where playlistname = $1", playlist.Name)
+func (srv *MusicServiceServer) DeletePlaylist(ctx context.Context, playlist *api.Playlist) (*api.Response, error) {
+	res, err := core.DeletePlaylist(playlist.Name, srv.curPlaylist)
 	if err != nil {
 		fmt.Println("Error:", err)
 		return &api.Response{Response: ""}, err
 	}
-	return res, err
+	_, err = srv.db.Exec("delete from playlists where name = $1", playlist.Name)
+	if err != nil {
+		fmt.Println("Error:", err)
+		return &api.Response{Response: ""}, err
+	}
+	return &api.Response{Response: res}, err
 }
 
-func (srv MusicServiceServer) PrintPlaylist(ctx context.Context, playlist *api.Playlist) (*api.Playlist, error) {
-	songs := getPlaylistSongs(playlist.Name)
-	tmp := core.CreateSimplePlaylist(playlist.Name, songs, ctx)
-	list := tmp.GetSongs()
-	songsSlice := make([]*api.Song, list.Len())
+func (srv *MusicServiceServer) PrintPlaylist(ctx context.Context, playlist *api.Playlist) (*api.Playlist, error) {
+	id, err := getPlaylistID(srv.db, playlist.Name)
+	if err != nil {
+		return &api.Playlist{Songs: nil}, err
+	}
+	songs := getPlaylistSongs(srv.db, id)
+	songsSlice := make([]*api.Song, songs.Len())
 	i := 0
-	var err error = nil
-
-	if list.Len() != 0 {
-		for node := list.Front(); node != nil; node = node.Next() {
+	if songs.Len() != 0 {
+		for node := songs.Front(); node != nil; node = node.Next() {
 			songsSlice[i] = &api.Song{
 				Author: node.Value.(*core.Song).Author,
 				Name: node.Value.(*core.Song).Name,
@@ -241,18 +256,19 @@ func (srv MusicServiceServer) PrintPlaylist(ctx context.Context, playlist *api.P
 	return &api.Playlist{Songs: songsSlice}, err
 }
 
-func (srv MusicServiceServer) GetPlaylist(ctx context.Context, playlist *api.Playlist) (*api.Response, error){
+func (srv *MusicServiceServer) GetPlaylist(ctx context.Context, playlist *api.Playlist) (*api.Response, error){
 	id_playlist, err := getPlaylistID(srv.db, playlist.Name)
 	if err != nil {
 		return &api.Response{Response: ""}, err
 	}
 	songs := getPlaylistSongs(srv.db, id_playlist)
-	curPlaylist := core.CreateSimplePlaylist(playlist.Name, songs, ctx)
-	res := core.GetPlaylist(s)
+	srv.curPlaylist.Pause()
+	srv.curPlaylist = core.CreateSimplePlaylist(playlist.Name, songs, context.Background())
+	res := core.GetPlaylist(playlist.Name)
 	return &api.Response{Response: res}, nil
 }
 
-func (srv MusicServiceServer) GetSong(ctx context.Context, song *api.Song) (*api.Song, error) {
+func (srv *MusicServiceServer) GetSong(ctx context.Context, song *api.Song) (*api.Song, error) {
 	var res *api.Song = nil
 	coreSong, err := srv.curPlaylist.GetSong(song.Name)
 
@@ -262,16 +278,59 @@ func (srv MusicServiceServer) GetSong(ctx context.Context, song *api.Song) (*api
 	return res, err
 }
 
-func (srv MusicServiceServer) UpdateSong(ctx context.Context, song *api.Song) (*api.Response, error) {
-	err := srv.curPlaylist.UpdateSong(song.Name, song.Author, int(song.Duration))
-	response := &api.Response{Response: "song updated"}
+func (srv *MusicServiceServer) UpdateSong(ctx context.Context, song *api.Song) (*api.Response, error) {
+	res, err := srv.curPlaylist.UpdateSong(song.Name, song.Author, int(song.Duration))
 	if err != nil {
 		return &api.Response{Response: ""}, err
 	}
-	_, err = srv.db.Exec("update songs set author = $1, duration = $2 where songname = $3", song.Author, song.Duration, song.Name)
+	_, err = srv.db.Exec("update songs set author = $1, duration = $2 where name = $3", song.Author, song.Duration, song.Name)
 	if err != nil {
 		fmt.Println("Error:", err)
-		response = &api.Response{Response: ""}
+		return &api.Response{Response: ""}, err
 	}
-	return response, err
+	return &api.Response{Response: res}, err
+}
+
+
+func (srv *MusicServiceServer) UpdatePlaylist(ctx context.Context, playlist *api.Playlist) (*api.Response, error) {
+	res, err := core.UpdatePlaylist(playlist.Name)
+	if err != nil {
+		return &api.Response{Response: ""}, err
+	}
+	_, err = srv.db.Exec("update playlists set name = $1 where name = $2", playlist.Name, srv.curPlaylist.Name)
+	if err != nil {
+		fmt.Println("Error:", err)
+		return &api.Response{Response: ""}, err
+	}
+	return &api.Response{Response: res}, err
+}
+
+func (srv *MusicServiceServer) AddSongToPlaylist(ctx context.Context, sp *api.SongPlaylist) (*api.Response, error) {
+	song_id, err = getSongId(sp.Song.Name)
+	playlist_id, err = getPlaylistID(sp.Playlist.Name)
+	if err != nil {
+		panic(err)
+	}
+	res := core.AddSongToPlaylist(song_id, playlist_id)
+	_, err := srv.db.Exec("insert into songs_playlists (id_song, id_playlist) values ($1, $2)", song_id, playlist_id)
+	if err != nil {
+		panic(err)
+	}
+	return &api.Response{Response: res}, nil
+}
+
+func (srv *MusicServiceServer) DeleteSongFromPlaylist(ctx context.Context, sp *api.SongPlaylist) (*api.Response, error) {
+	song_id, err = getSongId(sp.Song.Name)
+	playlist_id, err = getPlaylistID(sp.Playlist.Name)
+	res, err := core.DeleteSongFromPlaylist(song_id, playlist_id)
+	if err != nil {
+		fmt.Println("Error:", err)
+		return &api.Response{Response: ""}, err
+	}
+	_, err = srv.db.Exec("delete from songs_playlists where id_song = $1 and id_playlist = $2", song_id, playlist_id)
+	if err != nil {
+		fmt.Println("Error:", err)
+		return &api.Response{Response: ""}, err
+	}
+	return &api.Response{Response: res}, err
 }

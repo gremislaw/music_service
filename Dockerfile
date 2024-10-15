@@ -1,12 +1,11 @@
 #Docker Pipeline
-FROM alpine:3.17 as builder
+FROM golang:1.23.2-alpine3.20 as builder
 WORKDIR /app
 COPY . /app
-RUN apk add go git && \
-    go mod download && \
+RUN go mod download && \
     go build -o ./bin/music_service
 
-FROM alpine:3.17
+FROM alpine:3.20
 WORKDIR /app
 COPY --from=builder /app/bin/music_service ./bin/music_service
 EXPOSE 9000

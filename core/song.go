@@ -32,7 +32,7 @@ func (p *SimplePlaylist) Play() string{
 		p.currentSongNode = p.Songs.Front()
 	}
 	ctx, cancel := context.WithCancel(p.Ctx)
-	p.pauseCtx = cancel
+	p.stopCtx = cancel
 	go func() {
 		p.isPlaying = true
 		for {
@@ -68,7 +68,7 @@ func (p *SimplePlaylist) Pause() string {
 		return "already paused"
 	}
 	p.isPlaying = false
-	p.pauseCtx()
+	p.stopCtx()
 	return "paused"
 }
 func (p *SimplePlaylist) AddSong(song *Song) string {
@@ -153,21 +153,21 @@ func (p *SimplePlaylist) GetSong(name string) (Song, error) {
 	return res, err
 }
 
-func (p *SimplePlaylist) UpdateSong(name string, author string, duration int) error {
+func (p *SimplePlaylist) UpdateSong(name string, author string, duration int) (string, error) {
 	p.coreMtx.Lock()
 	var song *Song
-
+	res := "song updated"
 	node, err := p.getNode(name)
 	if err != nil {
 		fmt.Println("Error:", err)
 		p.coreMtx.Unlock()
-		return err
+		return "error", err
 	}
 	song.Author = author
 	song.Duration = duration
 	node.Value = song
 	p.coreMtx.Unlock()
-	return err
+	return res, err
 }
 
 func (p *SimplePlaylist) getNode(name string) (*list.Element, error) {

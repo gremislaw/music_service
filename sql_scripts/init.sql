@@ -2,11 +2,11 @@
 CREATE TABLE songs(
     id SERIAL PRIMARY KEY,
     duration INT,
-    songname VARCHAR(30),
+    name VARCHAR(30),
     author VARCHAR(50)
 );
 
-INSERT INTO songs(duration, songname, author) VALUES 
+INSERT INTO songs(duration, name, author) VALUES 
 (35, 'Lazy song', 'Bruno Mars'),
 (45, 'Complicated', 'Avril Lavigne'),
 (55, 'Kigeki', 'Gen Hoshino'),
@@ -15,22 +15,22 @@ INSERT INTO songs(duration, songname, author) VALUES
 
 CREATE TABLE playlists(
     id SERIAL PRIMARY KEY,
-    playlistname VARCHAR(30),
+    name VARCHAR(30)
 );
 
-INSERT INTO playlists(playlistname) VALUES 
+INSERT INTO playlists(name) VALUES 
 ('Pop'),
 ('Jazz'),
 ('Meloman');
 
 CREATE TABLE songs_playlists(
-    id_song INT
-    id_playlist INT
-    INDEX `FK_films_actors_actors` (`id_song`),
-    INDEX `FK_films_actors_films` (`id_playlist`),
-    CONSTRAINT `FK_films_actors_actors` FOREIGN KEY (`id_song`) REFERENCES `songs` (`id`) ON UPDATE CASCADE ON DELETE CASCADE,
-    CONSTRAINT `FK_films_actors_films` FOREIGN KEY (`id_playlist`) REFERENCES `playlists` (`id`) ON UPDATE CASCADE ON DELETE CASCADE
-)
+    id_song INT references songs(id),
+    id_playlist INT references playlists(id)
+);
+
+CREATE INDEX idx_song ON songs (id);
+CREATE INDEX idx_playlist ON playlists (id);
+
 
 INSERT INTO songs_playlists(id_song, id_playlist) VALUES 
 (1, 1),

@@ -5,15 +5,14 @@ import (
 	"fmt"
 	"music_service/service"
 	"net"
-	"os"
 	"github.com/gremislaw/music_service/api"
 	_ "github.com/lib/pq"
 	"google.golang.org/grpc"
 )
 
 func main() {
-	cfg := NewConfig()
-	if !cfg.isValid() {
+	cfg := service.NewConfig()
+	if !cfg.IsValid() {
 		panic("incorrect config")
 	}
 

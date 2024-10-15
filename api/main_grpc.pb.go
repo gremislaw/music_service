@@ -19,18 +19,21 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	MusicService_Play_FullMethodName           = "/music_service.api.MusicService/Play"
-	MusicService_Pause_FullMethodName          = "/music_service.api.MusicService/Pause"
-	MusicService_AddSong_FullMethodName        = "/music_service.api.MusicService/AddSong"
-	MusicService_DeleteSong_FullMethodName     = "/music_service.api.MusicService/DeleteSong"
-	MusicService_AddPlaylist_FullMethodName    = "/music_service.api.MusicService/AddPlaylist"
-	MusicService_GetPlaylist_FullMethodName    = "/music_service.api.MusicService/GetPlaylist"
-	MusicService_DeletePlaylist_FullMethodName = "/music_service.api.MusicService/DeletePlaylist"
-	MusicService_PrintPlaylist_FullMethodName  = "/music_service.api.MusicService/PrintPlaylist"
-	MusicService_GetSong_FullMethodName        = "/music_service.api.MusicService/GetSong"
-	MusicService_UpdateSong_FullMethodName     = "/music_service.api.MusicService/UpdateSong"
-	MusicService_Next_FullMethodName           = "/music_service.api.MusicService/Next"
-	MusicService_Prev_FullMethodName           = "/music_service.api.MusicService/Prev"
+	MusicService_Play_FullMethodName                   = "/music_service.api.MusicService/Play"
+	MusicService_Pause_FullMethodName                  = "/music_service.api.MusicService/Pause"
+	MusicService_AddSong_FullMethodName                = "/music_service.api.MusicService/AddSong"
+	MusicService_DeleteSong_FullMethodName             = "/music_service.api.MusicService/DeleteSong"
+	MusicService_AddSongToPlaylist_FullMethodName      = "/music_service.api.MusicService/AddSongToPlaylist"
+	MusicService_DeleteSongFromPlaylist_FullMethodName = "/music_service.api.MusicService/DeleteSongFromPlaylist"
+	MusicService_AddPlaylist_FullMethodName            = "/music_service.api.MusicService/AddPlaylist"
+	MusicService_GetPlaylist_FullMethodName            = "/music_service.api.MusicService/GetPlaylist"
+	MusicService_DeletePlaylist_FullMethodName         = "/music_service.api.MusicService/DeletePlaylist"
+	MusicService_PrintPlaylist_FullMethodName          = "/music_service.api.MusicService/PrintPlaylist"
+	MusicService_UpdatePlaylist_FullMethodName         = "/music_service.api.MusicService/UpdatePlaylist"
+	MusicService_GetSong_FullMethodName                = "/music_service.api.MusicService/GetSong"
+	MusicService_UpdateSong_FullMethodName             = "/music_service.api.MusicService/UpdateSong"
+	MusicService_Next_FullMethodName                   = "/music_service.api.MusicService/Next"
+	MusicService_Prev_FullMethodName                   = "/music_service.api.MusicService/Prev"
 )
 
 // MusicServiceClient is the client API for MusicService service.
@@ -41,12 +44,13 @@ type MusicServiceClient interface {
 	Pause(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*Response, error)
 	AddSong(ctx context.Context, in *Song, opts ...grpc.CallOption) (*Response, error)
 	DeleteSong(ctx context.Context, in *Song, opts ...grpc.CallOption) (*Response, error)
-	// rpc AddSongToPlaylist(SongPlaylist) returns(Response);
-	// rpc DeleteSongFromPlaylist(SongPlaylist) returns(Response);
+	AddSongToPlaylist(ctx context.Context, in *SongPlaylist, opts ...grpc.CallOption) (*Response, error)
+	DeleteSongFromPlaylist(ctx context.Context, in *SongPlaylist, opts ...grpc.CallOption) (*Response, error)
 	AddPlaylist(ctx context.Context, in *Playlist, opts ...grpc.CallOption) (*Response, error)
 	GetPlaylist(ctx context.Context, in *Playlist, opts ...grpc.CallOption) (*Response, error)
 	DeletePlaylist(ctx context.Context, in *Playlist, opts ...grpc.CallOption) (*Response, error)
 	PrintPlaylist(ctx context.Context, in *Playlist, opts ...grpc.CallOption) (*Playlist, error)
+	UpdatePlaylist(ctx context.Context, in *Playlist, opts ...grpc.CallOption) (*Response, error)
 	GetSong(ctx context.Context, in *Song, opts ...grpc.CallOption) (*Song, error)
 	UpdateSong(ctx context.Context, in *Song, opts ...grpc.CallOption) (*Response, error)
 	Next(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*Response, error)
@@ -101,6 +105,26 @@ func (c *musicServiceClient) DeleteSong(ctx context.Context, in *Song, opts ...g
 	return out, nil
 }
 
+func (c *musicServiceClient) AddSongToPlaylist(ctx context.Context, in *SongPlaylist, opts ...grpc.CallOption) (*Response, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(Response)
+	err := c.cc.Invoke(ctx, MusicService_AddSongToPlaylist_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *musicServiceClient) DeleteSongFromPlaylist(ctx context.Context, in *SongPlaylist, opts ...grpc.CallOption) (*Response, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(Response)
+	err := c.cc.Invoke(ctx, MusicService_DeleteSongFromPlaylist_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 func (c *musicServiceClient) AddPlaylist(ctx context.Context, in *Playlist, opts ...grpc.CallOption) (*Response, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(Response)
@@ -135,6 +159,16 @@ func (c *musicServiceClient) PrintPlaylist(ctx context.Context, in *Playlist, op
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(Playlist)
 	err := c.cc.Invoke(ctx, MusicService_PrintPlaylist_FullMethodName, in, out, cOpts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *musicServiceClient) UpdatePlaylist(ctx context.Context, in *Playlist, opts ...grpc.CallOption) (*Response, error) {
+	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
+	out := new(Response)
+	err := c.cc.Invoke(ctx, MusicService_UpdatePlaylist_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -189,12 +223,13 @@ type MusicServiceServer interface {
 	Pause(context.Context, *Empty) (*Response, error)
 	AddSong(context.Context, *Song) (*Response, error)
 	DeleteSong(context.Context, *Song) (*Response, error)
-	// rpc AddSongToPlaylist(SongPlaylist) returns(Response);
-	// rpc DeleteSongFromPlaylist(SongPlaylist) returns(Response);
+	AddSongToPlaylist(context.Context, *SongPlaylist) (*Response, error)
+	DeleteSongFromPlaylist(context.Context, *SongPlaylist) (*Response, error)
 	AddPlaylist(context.Context, *Playlist) (*Response, error)
 	GetPlaylist(context.Context, *Playlist) (*Response, error)
 	DeletePlaylist(context.Context, *Playlist) (*Response, error)
 	PrintPlaylist(context.Context, *Playlist) (*Playlist, error)
+	UpdatePlaylist(context.Context, *Playlist) (*Response, error)
 	GetSong(context.Context, *Song) (*Song, error)
 	UpdateSong(context.Context, *Song) (*Response, error)
 	Next(context.Context, *Empty) (*Response, error)
@@ -221,6 +256,12 @@ func (UnimplementedMusicServiceServer) AddSong(context.Context, *Song) (*Respons
 func (UnimplementedMusicServiceServer) DeleteSong(context.Context, *Song) (*Response, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method DeleteSong not implemented")
 }
+func (UnimplementedMusicServiceServer) AddSongToPlaylist(context.Context, *SongPlaylist) (*Response, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method AddSongToPlaylist not implemented")
+}
+func (UnimplementedMusicServiceServer) DeleteSongFromPlaylist(context.Context, *SongPlaylist) (*Response, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DeleteSongFromPlaylist not implemented")
+}
 func (UnimplementedMusicServiceServer) AddPlaylist(context.Context, *Playlist) (*Response, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method AddPlaylist not implemented")
 }
@@ -232,6 +273,9 @@ func (UnimplementedMusicServiceServer) DeletePlaylist(context.Context, *Playlist
 }
 func (UnimplementedMusicServiceServer) PrintPlaylist(context.Context, *Playlist) (*Playlist, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method PrintPlaylist not implemented")
+}
+func (UnimplementedMusicServiceServer) UpdatePlaylist(context.Context, *Playlist) (*Response, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdatePlaylist not implemented")
 }
 func (UnimplementedMusicServiceServer) GetSong(context.Context, *Song) (*Song, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetSong not implemented")
@@ -338,6 +382,42 @@ func _MusicService_DeleteSong_Handler(srv interface{}, ctx context.Context, dec 
 	return interceptor(ctx, in, info, handler)
 }
 
+func _MusicService_AddSongToPlaylist_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SongPlaylist)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MusicServiceServer).AddSongToPlaylist(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: MusicService_AddSongToPlaylist_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MusicServiceServer).AddSongToPlaylist(ctx, req.(*SongPlaylist))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _MusicService_DeleteSongFromPlaylist_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(SongPlaylist)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MusicServiceServer).DeleteSongFromPlaylist(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: MusicService_DeleteSongFromPlaylist_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MusicServiceServer).DeleteSongFromPlaylist(ctx, req.(*SongPlaylist))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 func _MusicService_AddPlaylist_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(Playlist)
 	if err := dec(in); err != nil {
@@ -406,6 +486,24 @@ func _MusicService_PrintPlaylist_Handler(srv interface{}, ctx context.Context, d
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(MusicServiceServer).PrintPlaylist(ctx, req.(*Playlist))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _MusicService_UpdatePlaylist_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Playlist)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MusicServiceServer).UpdatePlaylist(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: MusicService_UpdatePlaylist_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MusicServiceServer).UpdatePlaylist(ctx, req.(*Playlist))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -506,6 +604,14 @@ var MusicService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _MusicService_DeleteSong_Handler,
 		},
 		{
+			MethodName: "AddSongToPlaylist",
+			Handler:    _MusicService_AddSongToPlaylist_Handler,
+		},
+		{
+			MethodName: "DeleteSongFromPlaylist",
+			Handler:    _MusicService_DeleteSongFromPlaylist_Handler,
+		},
+		{
 			MethodName: "AddPlaylist",
 			Handler:    _MusicService_AddPlaylist_Handler,
 		},
@@ -520,6 +626,10 @@ var MusicService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "PrintPlaylist",
 			Handler:    _MusicService_PrintPlaylist_Handler,
+		},
+		{
+			MethodName: "UpdatePlaylist",
+			Handler:    _MusicService_UpdatePlaylist_Handler,
 		},
 		{
 			MethodName: "GetSong",
