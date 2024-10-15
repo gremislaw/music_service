@@ -48,6 +48,18 @@ func getSongsFromDb(db *sql.DB) *list.List{
 	return songs
 }
 
+func ConnectExists(db *sql.DB, id_song, id_playlist int64) (bool, error) {
+	sqlStmt := "select * from songs_playlists where id_song = $1 and id_playlist = $2"
+	err := db.QueryRow(sqlStmt, id_song, id_playlist).Scan(&id_song, &id_playlist)
+	if err != nil {
+		if err != sql.ErrNoRows {
+			return false, err
+		}
+		return false, nil
+	}
+	return true, nil
+}
+
 func getSongID(db *sql.DB, name string) (int64, error) {
 	var id_temp sql.NullInt64
 	var id int64 = -1
@@ -69,7 +81,7 @@ func getSongID(db *sql.DB, name string) (int64, error) {
 func getPlaylistID(db *sql.DB, name string) (int64, error) {
 	var id_temp sql.NullInt64
 	var id int64 = -1
-	err := db.QueryRow("select id from playlists where playlistname = $1", name).Scan(&id_temp)
+	err := db.QueryRow("select id from playlists where name = $1", name).Scan(&id_temp)
 	if err != nil {
 		fmt.Println("Error:", err)
 		return -1, err
@@ -306,31 +318,53 @@ func (srv *MusicServiceServer) UpdatePlaylist(ctx context.Context, playlist *api
 }
 
 func (srv *MusicServiceServer) AddSongToPlaylist(ctx context.Context, sp *api.SongPlaylist) (*api.Response, error) {
-	song_id, err = getSongId(sp.Song.Name)
-	playlist_id, err = getPlaylistID(sp.Playlist.Name)
+	var err error = nil
+	var song_id, playlist_id int64
+	var ok bool
+	song_id, err = getSongID(srv.db, sp.Song.Name)
 	if err != nil {
-		panic(err)
+		return &api.Response{Response: ""}, err
+	}
+	playlist_id, err = getPlaylistID(srv.db, sp.Playlist.Name)
+	if err != nil {
+		return &api.Response{Response: ""}, err
 	}
 	res := core.AddSongToPlaylist(song_id, playlist_id)
-	_, err := srv.db.Exec("insert into songs_playlists (id_song, id_playlist) values ($1, $2)", song_id, playlist_id)
+	ok, err = ConnectExists(srv.db, song_id, playlist_id)
 	if err != nil {
-		panic(err)
+		return &api.Response{Response: ""}, err
 	}
-	return &api.Response{Response: res}, nil
+	if !ok {	
+		_, err = srv.db.Exec("insert into songs_playlists (id_song, id_playlist) values ($1, $2)", song_id, playlist_id)
+		if err != nil {
+			return &api.Response{Response: ""}, err
+		}
+	}
+	return &api.Response{Response: res}, err
 }
 
 func (srv *MusicServiceServer) DeleteSongFromPlaylist(ctx context.Context, sp *api.SongPlaylist) (*api.Response, error) {
-	song_id, err = getSongId(sp.Song.Name)
-	playlist_id, err = getPlaylistID(sp.Playlist.Name)
-	res, err := core.DeleteSongFromPlaylist(song_id, playlist_id)
+	var err error = nil
+	var song_id, playlist_id int64
+	var ok bool
+	song_id, err = getSongID(srv.db, sp.Song.Name)
 	if err != nil {
-		fmt.Println("Error:", err)
 		return &api.Response{Response: ""}, err
 	}
-	_, err = srv.db.Exec("delete from songs_playlists where id_song = $1 and id_playlist = $2", song_id, playlist_id)
+	playlist_id, err = getPlaylistID(srv.db, sp.Playlist.Name)
 	if err != nil {
-		fmt.Println("Error:", err)
 		return &api.Response{Response: ""}, err
+	}
+	res := core.DeleteSongFromPlaylist(song_id, playlist_id)
+	ok, err = ConnectExists(srv.db, song_id, playlist_id)
+	if err != nil {
+		return &api.Response{Response: ""}, err
+	}
+	if !ok {
+		_, err = srv.db.Exec("delete from songs_playlists where id_song = $1 and id_playlist = $2", song_id, playlist_id)
+		if err != nil {
+			return &api.Response{Response: ""}, err
+		}
 	}
 	return &api.Response{Response: res}, err
 }

@@ -24,8 +24,8 @@ INSERT INTO playlists(name) VALUES
 ('Meloman');
 
 CREATE TABLE songs_playlists(
-    id_song INT references songs(id),
-    id_playlist INT references playlists(id)
+    id_song SERIAL references songs(id) on delete cascade,
+    id_playlist SERIAL references playlists(id) on delete cascade
 );
 
 CREATE INDEX idx_song ON songs (id);

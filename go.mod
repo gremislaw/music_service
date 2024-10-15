@@ -3,7 +3,7 @@ module music_service
 go 1.23.1
 
 require (
-	github.com/gremislaw/music_service/api v0.0.0-20241010150239-588fe49dbeec
+	github.com/gremislaw/music_service/api v0.0.0-20241015121829-56bfdbea5be5
 	github.com/lib/pq v1.10.9
 	google.golang.org/grpc v1.67.1
 )

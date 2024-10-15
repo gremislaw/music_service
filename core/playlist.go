@@ -39,7 +39,7 @@ func AddPlaylist(playlist *SimplePlaylist) string {
 
 func DeletePlaylist(name string, p *SimplePlaylist) (string, error) {
 	var err error
-	res := fmt.Sprintf("Playlist deleted. Name: %s", p.Name)
+	res := fmt.Sprintf("Playlist deleted. Name: %s", name)
 	if (p.Name != name) {
 		return res, err
 	}
@@ -59,7 +59,7 @@ func GetPlaylist(playlistname string) string {
 
 func UpdatePlaylist(name string) (string, error) {
 	res := "playlist updated"
-	err := nil
+	var err error = nil
 	if (name == "") {
 		err = errors.New("Incorrect name for playlist")
 		fmt.Println("Error:", err)
@@ -74,7 +74,7 @@ func AddSongToPlaylist(song_id, playlist_id int64) string {
 	return res
 }
 
-func DeleteSongToPlaylist(song_id, playlist_id int64) string {
+func DeleteSongFromPlaylist(song_id, playlist_id int64) string {
 	res := fmt.Sprintf("Song deleted from playlist.")
 	fmt.Println(res)
 	return res
