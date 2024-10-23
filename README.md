@@ -1,7 +1,12 @@
 # Описание
 * Музыкальный сервис - сервис, который предоставляет музыкальные плейлисты и API по взаимодействию с ними. Вся информация по трекам и плейлистам хранится в Postgres. Реализована связь many2many. Серверная часть реализована на grpc.
+
 * Реализация клиента - https://github.com/gremislaw/music_service_client
-* Получить API можно с гитхаба - `import github.com/gremislaw/music_service/api`
+
+* Получить API можно так - 
+```golang
+import github.com/gremislaw/music_service/api
+```
 
 # Функционал
 * Получение плейлиста
