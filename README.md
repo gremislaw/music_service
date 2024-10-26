@@ -29,6 +29,11 @@ import github.com/gremislaw/music_service/api
 make docker
 ```
 
+# Форматирование кода (стиль кода)
+```bash
+make format
+```
+
 # Конфигурация сервиса
 
 |          | Database    | Server      |
