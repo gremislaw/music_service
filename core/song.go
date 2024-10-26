@@ -17,13 +17,13 @@ type Playlist interface {
 }
 
 type Song struct {
-	Name string
+	Name     string
 	Duration int
-	Author string
-	Id int
+	Author   string
+	Id       int
 }
 
-func (p *SimplePlaylist) Play() string{
+func (p *SimplePlaylist) Play() string {
 	if p.isPlaying {
 		return "already playing"
 	}
@@ -41,7 +41,7 @@ func (p *SimplePlaylist) Play() string{
 			for p.currentSongPlayTime != currentSong.Duration {
 				for i := 0; i != 5; i++ {
 					select {
-					case <- ctx.Done():
+					case <-ctx.Done():
 						return
 					default:
 						time.Sleep(200 * time.Millisecond)
@@ -178,7 +178,7 @@ func (p *SimplePlaylist) getNode(name string) (*list.Element, error) {
 			node = e
 			err = nil
 			break
-		}	
+		}
 	}
 	return node, err
 }

@@ -16,6 +16,9 @@ docker:
 rebuild:
 	go mod tidy
 	make build
+
+format:
+	go fmt ./...
 	
 proto:
 	protoc --go_out=. --go_opt=paths=import \

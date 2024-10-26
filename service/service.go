@@ -7,35 +7,34 @@ import (
 	"errors"
 	"fmt"
 	"music_service/core"
-	"time"
 	"os"
+	"time"
 
 	"github.com/gremislaw/music_service/api"
 )
 
-
 type MusicServiceServer struct {
 	api.UnimplementedMusicServiceServer
 	curPlaylist *core.SimplePlaylist
-	db *sql.DB
+	db          *sql.DB
 }
 
 type config struct {
-	POSTGRES_HOST string
-	POSTGRES_PORT string
-	POSTGRES_DB string
-	POSTGRES_USER string
-  POSTGRES_PASSWORD string
-	APP_IP string
-	APP_PORT string
+	POSTGRES_HOST     string
+	POSTGRES_PORT     string
+	POSTGRES_DB       string
+	POSTGRES_USER     string
+	POSTGRES_PASSWORD string
+	APP_IP            string
+	APP_PORT          string
 }
 
-func getSongsFromDb(db *sql.DB) *list.List{
+func getSongsFromDb(db *sql.DB) *list.List {
 	songs := list.New()
 	rows, err := db.Query("select * from songs")
 	if err != nil {
-        panic(err)
-    }
+		panic(err)
+	}
 	defer rows.Close()
 	for rows.Next() {
 		song := new(core.Song)
@@ -69,7 +68,7 @@ func getSongID(db *sql.DB, name string) (int64, error) {
 		return -1, err
 	}
 	if id_temp.Valid {
-    id = id_temp.Int64
+		id = id_temp.Int64
 	} else {
 		err = errors.New("invalid id in getPlatlistID")
 		fmt.Println("Error:", err)
@@ -87,7 +86,7 @@ func getPlaylistID(db *sql.DB, name string) (int64, error) {
 		return -1, err
 	}
 	if id_temp.Valid {
-    id = id_temp.Int64
+		id = id_temp.Int64
 	} else {
 		err = errors.New("invalid id in getPlatlistID")
 		fmt.Println("Error:", err)
@@ -127,33 +126,33 @@ func isDBAvailable(db *sql.DB) bool {
 	var res bool = true
 
 	_, err := db.Query("select 1")
-	
+
 	if err != nil {
 		res = false
-  }
+	}
 	return res
 }
 
 func NewConfig() config {
 	cfg := config{
-		POSTGRES_HOST: os.Getenv("POSTGRES_HOST"),
-		POSTGRES_PORT: os.Getenv("POSTGRES_PORT"),
-		POSTGRES_DB: os.Getenv("POSTGRES_DB"),
-		POSTGRES_USER: os.Getenv("POSTGRES_USER"),
+		POSTGRES_HOST:     os.Getenv("POSTGRES_HOST"),
+		POSTGRES_PORT:     os.Getenv("POSTGRES_PORT"),
+		POSTGRES_DB:       os.Getenv("POSTGRES_DB"),
+		POSTGRES_USER:     os.Getenv("POSTGRES_USER"),
 		POSTGRES_PASSWORD: os.Getenv("POSTGRES_PASSWORD"),
-		APP_IP: os.Getenv("APP_IP"),
-		APP_PORT: os.Getenv("APP_PORT"),
+		APP_IP:            os.Getenv("APP_IP"),
+		APP_PORT:          os.Getenv("APP_PORT"),
 	}
 	return cfg
 }
 
 func (cfg config) IsValid() bool {
 	var res bool = true
-	if (cfg.POSTGRES_USER == "" || cfg.POSTGRES_PASSWORD == "" ||
-			cfg.POSTGRES_DB == "" || cfg.POSTGRES_HOST == "" ||
-			cfg.POSTGRES_PORT == "" || cfg.APP_IP == "" ||
-			cfg.APP_PORT == "") {
-				res = false
+	if cfg.POSTGRES_USER == "" || cfg.POSTGRES_PASSWORD == "" ||
+		cfg.POSTGRES_DB == "" || cfg.POSTGRES_HOST == "" ||
+		cfg.POSTGRES_PORT == "" || cfg.APP_IP == "" ||
+		cfg.APP_PORT == "" {
+		res = false
 	}
 	return res
 }
@@ -162,7 +161,7 @@ func NewService(db *sql.DB) api.MusicServiceServer {
 	service := MusicServiceServer{}
 
 	for i := 1; !isDBAvailable(db); i++ {
-        fmt.Printf("Db is unavailable(%ds)\n", i)
+		fmt.Printf("Db is unavailable(%ds)\n", i)
 		time.Sleep(5 * time.Second)
 	}
 	fmt.Println("Db is available")
@@ -183,7 +182,7 @@ func (srv *MusicServiceServer) Pause(ctx context.Context, empty *api.Empty) (*ap
 	return &api.Response{Response: res}, nil
 }
 
-func (srv *MusicServiceServer) AddSong(ctx context.Context, song *api.Song) (*api.Response, error){
+func (srv *MusicServiceServer) AddSong(ctx context.Context, song *api.Song) (*api.Response, error) {
 	s := new(core.Song)
 	s.Author = song.Author
 	s.Duration = int(song.Duration)
@@ -220,7 +219,7 @@ func (srv *MusicServiceServer) DeleteSong(ctx context.Context, song *api.Song) (
 	return &api.Response{Response: res}, err
 }
 
-func (srv *MusicServiceServer) AddPlaylist(ctx context.Context, playlist *api.Playlist) (*api.Response, error){
+func (srv *MusicServiceServer) AddPlaylist(ctx context.Context, playlist *api.Playlist) (*api.Response, error) {
 	s := core.CreateSimplePlaylist(playlist.Name, list.New(), nil)
 	res := core.AddPlaylist(s)
 	_, err := srv.db.Exec("insert into playlists (name) values ($1)", playlist.Name)
@@ -255,8 +254,8 @@ func (srv *MusicServiceServer) PrintPlaylist(ctx context.Context, playlist *api.
 	if songs.Len() != 0 {
 		for node := songs.Front(); node != nil; node = node.Next() {
 			songsSlice[i] = &api.Song{
-				Author: node.Value.(*core.Song).Author,
-				Name: node.Value.(*core.Song).Name,
+				Author:   node.Value.(*core.Song).Author,
+				Name:     node.Value.(*core.Song).Name,
 				Duration: int64(node.Value.(*core.Song).Duration),
 			}
 			i++
@@ -268,7 +267,7 @@ func (srv *MusicServiceServer) PrintPlaylist(ctx context.Context, playlist *api.
 	return &api.Playlist{Songs: songsSlice}, err
 }
 
-func (srv *MusicServiceServer) GetPlaylist(ctx context.Context, playlist *api.Playlist) (*api.Response, error){
+func (srv *MusicServiceServer) GetPlaylist(ctx context.Context, playlist *api.Playlist) (*api.Response, error) {
 	id_playlist, err := getPlaylistID(srv.db, playlist.Name)
 	if err != nil {
 		return &api.Response{Response: ""}, err
@@ -303,7 +302,6 @@ func (srv *MusicServiceServer) UpdateSong(ctx context.Context, song *api.Song) (
 	return &api.Response{Response: res}, err
 }
 
-
 func (srv *MusicServiceServer) UpdatePlaylist(ctx context.Context, playlist *api.Playlist) (*api.Response, error) {
 	res, err := core.UpdatePlaylist(playlist.Name)
 	if err != nil {
@@ -334,7 +332,7 @@ func (srv *MusicServiceServer) AddSongToPlaylist(ctx context.Context, sp *api.So
 	if err != nil {
 		return &api.Response{Response: ""}, err
 	}
-	if !ok {	
+	if !ok {
 		_, err = srv.db.Exec("insert into songs_playlists (id_song, id_playlist) values ($1, $2)", song_id, playlist_id)
 		if err != nil {
 			return &api.Response{Response: ""}, err

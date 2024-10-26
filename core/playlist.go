@@ -9,15 +9,15 @@ import (
 )
 
 type SimplePlaylist struct {
-	Name string
-	Ctx context.Context
+	Name  string
+	Ctx   context.Context
 	Songs *list.List
 
-	currentSongNode *list.Element
+	currentSongNode     *list.Element
 	currentSongPlayTime int
-	stopCtx context.CancelFunc
-	coreMtx *sync.Mutex
-	isPlaying bool
+	stopCtx             context.CancelFunc
+	coreMtx             *sync.Mutex
+	isPlaying           bool
 }
 
 func CreateSimplePlaylist(name string, songs *list.List, ctx context.Context) *SimplePlaylist {
@@ -40,7 +40,7 @@ func AddPlaylist(playlist *SimplePlaylist) string {
 func DeletePlaylist(name string, p *SimplePlaylist) (string, error) {
 	var err error
 	res := fmt.Sprintf("Playlist deleted. Name: %s", name)
-	if (p.Name != name) {
+	if p.Name != name {
 		return res, err
 	}
 	if p.isPlaying {
@@ -60,7 +60,7 @@ func GetPlaylist(playlistname string) string {
 func UpdatePlaylist(name string) (string, error) {
 	res := "playlist updated"
 	var err error = nil
-	if (name == "") {
+	if name == "" {
 		err = errors.New("Incorrect name for playlist")
 		fmt.Println("Error:", err)
 		return "error", err

@@ -3,11 +3,11 @@ package main
 import (
 	"database/sql"
 	"fmt"
-	"music_service/service"
-	"net"
 	"github.com/gremislaw/music_service/api"
 	_ "github.com/lib/pq"
 	"google.golang.org/grpc"
+	"music_service/service"
+	"net"
 )
 
 func main() {
@@ -27,12 +27,10 @@ func main() {
 	grpcServer := grpc.NewServer()
 	lis, err := net.Listen("tcp", fmt.Sprintf("%s:%s", cfg.APP_IP, cfg.APP_PORT))
 	if err != nil {
-		fmt.Printf("listen error")
-        panic("listen error")
-    }
+		panic("listen error")
+	}
 	api.RegisterMusicServiceServer(grpcServer, service.NewService(db))
 	if err := grpcServer.Serve(lis); err != nil {
 		panic(err)
 	}
-
 }
