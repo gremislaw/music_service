@@ -13,7 +13,7 @@ docker:
 	sudo docker compose up -d --build
 	sudo docker logs -tf music_service
 
-rebuild:
+rebuild: clean
 	go mod tidy
 	make build
 
@@ -26,3 +26,7 @@ proto:
     proto/main.proto
 	cd api && GOPROXY=direct go mod init github.com/gremislaw/music_service/api
 	cd api && GOPROXY=direct go mod tidy
+
+clean:
+	rm -rf ./bin
+	rm -rf ./data
